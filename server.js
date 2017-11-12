@@ -24,30 +24,31 @@ app.use(logger("dev"));
 
 // Use body-parser for handling form submissions
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
 // Use express.static to serve the public folder as a static directory
 app.use(express.static("public"));
 
 // Set mongoose to leverage built in JavaScript ES6 Promises
 // Connect to the Mongo DB
 mongoose.Promise = Promise;
-mongoose.connect("mongodb://localhost/week18Populater", {
+mongoose.connect("mongodb://localhost/tunescrape", {
   useMongoClient: true
 });
 
 // Routes
 
-// A GET route for scraping the echojs website
+// A GET route for scraping the target website (music.avclub)
 app.get("/scrape", function(req, res) {
   // First, we grab the body of the html with request
   axios.get("http://music.avclub.com/").then(function(response) {
     // Then, we load that into cheerio and save it to $ for a shorthand selector
     var $ = cheerio.load(response.data);
 
-   console.log('scraper no scraping');
     // Now, we grab every h2 within an article tag, and do the following:
     $("article").each(function(i, element) {
       // Save an empty result object
-      var result = {};
+      var result = {};   
 
       // Add the text and href of every link, and save them as properties of the result object
       result.title = $(this)
@@ -57,22 +58,38 @@ app.get("/scrape", function(req, res) {
         .find(".headline")
         .children("a")
         .attr("href");
+      result.excerpt = $(this)
+        .find(".excerpt p")
+        .text();
+
+      var imageURL = $(this)
+      .find("picture source")
+      .attr("data-srcset");
+      
+      if(imageURL){
+        result.image = imageURL;
+      }
 
       console.log(result)
 
       // Create a new Article using the `result` object built from scraping
-      // db.Article
-      //   .create(result)
-      //   .then(function(dbArticle) {
-      //     // If we were able to successfully scrape and save an Article, send a message to the client
-      //     res.send("Scrape Complete");
-      //   })
-      //   .catch(function(err) {
-      //     // If an error occurred, send it to the client
-      //     res.json(err);
-      //   });
+      db.Article
+        .create(result)
+        .then(function(dbArticle) {
+          // If we were able to successfully scrape and save an Article, send a message to the client
+          // res.send("Scrape Complete");
+          res.end();
+          
+        })
+        .catch(function(err) {
+         
+          console.error(err);
+          res.end();
+        });
     });
+    
   });
+
 });
 
 // Route for getting all Articles from the db
@@ -91,7 +108,7 @@ app.get("/articles", function(req, res) {
 
 });
 
-// Route for grabbing a specific Article by id, populate it with it's note
+// Route for grabbing a specific Article by id, populate it with its note
 app.get("/articles/:id", function(req, res) {
   // TODO
   // ====
