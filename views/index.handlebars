@@ -6,22 +6,24 @@
         <div class="row">  
           <p>{{this.excerpt}}</p>
         </div>
+
+        <div class="row">
+          <div class="col s8">
+            <input type="text" class="note-input" name="note-input">
+          </div>
+          <div class="col s4">
+            <input data-id="{{this._id}}" class="btn note-button" type="submit" value="Add Note">
+          </div>
+        </div>
+        
         <div class="row">  
          
           {{#each this.note}}
             {{!-- <i class="material-icons">delete</i> --}}
-            <h4>{{this.note.body}}</h4>
+            <p><strong>{{this.body}}</strong></p>
           {{/each}}
-
-          <div class="row">
-            <div class="col s8">
-              <input type="text" class="note-input" name="note-input">
-            </div>
-            <div class="col s4">
-              <input data-id="{{this._id}}" class="btn note-button" type="submit" value="Add Note">
-            </div>
-          </div>
-        </div>    
+        </div>
+            
       </div>
     </div>
   </div>

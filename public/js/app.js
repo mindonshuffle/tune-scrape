@@ -59,6 +59,7 @@ $(document).on("click", ".note-button", function() {
   // Grab the id associated with the article from the submit button
   var thisId = $(this).attr("data-id");
 
+  console.log($(this).parent().parent().find(".note-input").val());
   // Run a POST request to change the note, using what's entered in the inputs
   $.ajax({
     method: "POST",
@@ -67,16 +68,17 @@ $(document).on("click", ".note-button", function() {
       // Value taken from title input
       title: "",
       // Value taken from note textarea
-      body: $(this).prev('.note-input').val()
+      body: $(this).parent().parent().find(".note-input").val()
     }
   })
     // With that done
     .done(function(data) {
       // Log the response
       console.log(data);
-      // Empty the notes section
-      $("#notes").empty();
+
     });
+
+    window.location.reload();
 
   // Also, remove the values entered in the input and textarea for note entry
   // $(".note-text").val("");
