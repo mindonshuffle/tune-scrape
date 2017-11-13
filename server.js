@@ -58,10 +58,10 @@ app.get("/", function(req, res) {
   
   // Grab each article and parse
     $("article").each(function(i, element) {
-    // Save an empty result object
+      // Save an empty result object
       var result = {};   
     
-    // Finds the desired elements from page and saves to result object
+      // Finds the desired elements from page and saves to result object
       result.title = $(this)
       .find(".headline")
       .text();
@@ -106,7 +106,10 @@ app.get("/", function(req, res) {
     });   
   });
   //send user to page
-  res.sendFile(path.join(__dirname + '/public/index.html'));
+
+  var hbsObject = {};
+  res.render("index", hbsObject);
+  
 });
 
 // Route for getting all Articles from the db
