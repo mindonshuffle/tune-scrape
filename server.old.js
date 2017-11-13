@@ -7,7 +7,6 @@ var mongoose = require("mongoose");
 // Axios is a promised-based http library, similar to jQuery's Ajax method
 // It works on the client and on the server
 var axios = require("axios");
-var request = require("request");
 var cheerio = require("cheerio");
 
 // Require all models
@@ -41,14 +40,12 @@ useMongoClient: true
 
 // A GET route for scraping the target website (music.avclub)
 app.get("/scrape", function(req, res) {
-  // request to fetch page body data
-  request("http://music.avclub.com/", function(err, response, body) {
-    if(err) throw err;
-
+  // Axios request to fetch page body data
+  axios.get("http://music.avclub.com/").then(function(response) {
   // Then, we load that into cheerio and save it to $ for a shorthand selector
-    var $ = cheerio.load(body);
+    var $ = cheerio.load(response.data);
   
-  // Grab each article and parse
+  // Now, we grab every h2 within an article tag, and do the following:
     $("article").each(function(i, element) {
     // Save an empty result object
       var result = {};   
@@ -117,11 +114,21 @@ app.get("/articles", function(req, res) {
 
 // Route for grabbing a specific Article by id, populate it with its note
 app.get("/articles/:id", function(req, res) {
+  // TODO
+  // ====
+  // Finish the route so it finds one article using the req.params.id,
+  // and run the populate method with "note",
+  // then responds with the article with the note included
   
   db.Article
+  
+  // .find( {_id: req.params.id })
   .findById(req.params.id)
+  
   .populate("note")
+  
   .then(function(dbArticle) {
+    
     // If all Articles are successfully found, send them back to the client
     res.json(dbArticle);
   })
