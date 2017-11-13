@@ -1,24 +1,28 @@
-<header>
-      <!--Top Logo / Navbar-->
-      <nav class="nav ">
-        <div class="nav-wrapper">
-          <a href="/" class="brand-logo">Tune Scrape</a>
-          <ul id="nav-mobile" class="right hide-on-med-and-down">
-          </ul>
-        </div>   
-      </nav>
-    </header>
-    
-    <main class="valign-wrapper">
-      <div id= "articles" class="container">
-       
-      </div>
-    </main>
-
-    <footer class="page-footer center">
-      <div class="footer-copyright">
-        <div class="container">
-        © 2017
+{{#each article}}
+  <div class="row">
+    <div id="login-card" class="card col s12">
+      <div class="card-content">
+        <a href="{{this.link}}"><span class="card-title">{{this.title}}</span></a>
+        <div class="row">  
+          <p>{{this.excerpt}}</p>
         </div>
+        <div class="row">  
+         
+          {{#each this.note}}
+            {{!-- <i class="material-icons">delete</i> --}}
+            <h4>{{this.note.body}}</h4>
+          {{/each}}
+
+          <div class="row">
+            <div class="col s8">
+              <input type="text" class="note-input" name="note-input">
+            </div>
+            <div class="col s4">
+              <input data-id="{{this._id}}" class="btn note-button" type="submit" value="Add Note">
+            </div>
+          </div>
+        </div>    
       </div>
-    </footer>
+    </div>
+  </div>
+{{/each}}

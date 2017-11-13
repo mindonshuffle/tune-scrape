@@ -102,14 +102,21 @@ app.get("/", function(req, res) {
           console.log(result.title, "\nArticle already in DB");
           res.end();
         }  
-      });  
+      }); 
     });   
   });
   //send user to page
 
-  var hbsObject = {};
-  res.render("index", hbsObject);
-  
+  db.Article
+  .find({})
+  .populate("note")
+  .then(function(dbArticles){
+    var hbsObject = {article: dbArticles};
+    console.log(hbsObject)
+    res.render("index", hbsObject);
+
+  })
+
 });
 
 // Route for getting all Articles from the db
