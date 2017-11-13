@@ -33,35 +33,36 @@ app.use(express.static("public"));
 // Connect to the Mongo DB
 mongoose.Promise = Promise;
 mongoose.connect("mongodb://localhost/tunescrape", {
-  useMongoClient: true
+useMongoClient: true
 });
 
 // Routes
 
 // A GET route for scraping the target website (music.avclub)
 app.get("/scrape", function(req, res) {
-  // First, we grab the body of the html with request
+  // Axios request to fetch page body data
   axios.get("http://music.avclub.com/").then(function(response) {
-    // Then, we load that into cheerio and save it to $ for a shorthand selector
+  // Then, we load that into cheerio and save it to $ for a shorthand selector
     var $ = cheerio.load(response.data);
-
-    // Now, we grab every h2 within an article tag, and do the following:
+  
+  // Now, we grab every h2 within an article tag, and do the following:
     $("article").each(function(i, element) {
-      // Save an empty result object
+    // Save an empty result object
       var result = {};   
-
-      // Add the text and href of every link, and save them as properties of the result object
+    
+    // Finds the desired elements from page and saves to result object
       result.title = $(this)
-        .find(".headline")
-        .text();
+      .find(".headline")
+      .text();
       result.link = $(this)
-        .find(".headline")
-        .children("a")
-        .attr("href");
+      .find(".headline")
+      .children("a")
+      .attr("href");
       result.excerpt = $(this)
-        .find(".excerpt p")
-        .text();
-
+      .find(".excerpt p")
+      .text();
+      
+      //only add image if present
       var imageURL = $(this)
       .find("picture source")
       .attr("data-srcset");
@@ -69,43 +70,46 @@ app.get("/scrape", function(req, res) {
       if(imageURL){
         result.image = imageURL;
       }
-
-      console.log(result)
-
-      // Create a new Article using the `result` object built from scraping
-      db.Article
-        .create(result)
-        .then(function(dbArticle) {
-          // If we were able to successfully scrape and save an Article, send a message to the client
-          // res.send("Scrape Complete");
-          res.end();
-          
-        })
-        .catch(function(err) {
-         
-          console.error(err);
-          res.end();
-        });
-    });
     
+      // Check if article in DB, save if not
+      db.Article
+      .find({title: result.title})
+      .then(function(dbResult){
+        // console.log(dbResult)
+        if(dbResult.length < 1){
+          console.log(result.title, "\nArticle Not Found, adding to DB");
+          db.Article.create(result)
+          .then(function(dbArticle) {
+            res.end();
+          })
+          .catch(function(err) {
+            console.error(err);
+            res.end();
+          });
+        }
+        else{
+          console.log(result.title, "\nArticle already in DB");
+          res.end();
+        }  
+      });  
+    });
   });
-
 });
 
 // Route for getting all Articles from the db
 app.get("/articles", function(req, res) {
   // TODO: Finish the route so it grabs all of the articles
-    db.Article
-    .find({})
-    .then(function(dbArticle) {
-      // If all Articles are successfully found, send them back to the client
-      res.json(dbArticle);
-    })
-    .catch(function(err) {
-      // If an error occurs, send the error back to the client
-      res.json(err);
-    });
-
+  db.Article
+  .find({})
+  .then(function(dbArticle) {
+    // If all Articles are successfully found, send them back to the client
+    res.json(dbArticle);
+  })
+  .catch(function(err) {
+    // If an error occurs, send the error back to the client
+    res.json(err);
+  });
+  
 });
 
 // Route for grabbing a specific Article by id, populate it with its note
@@ -115,23 +119,23 @@ app.get("/articles/:id", function(req, res) {
   // Finish the route so it finds one article using the req.params.id,
   // and run the populate method with "note",
   // then responds with the article with the note included
-
+  
   db.Article
-
-    // .find( {_id: req.params.id })
-    .findById(req.params.id)
+  
+  // .find( {_id: req.params.id })
+  .findById(req.params.id)
+  
+  .populate("note")
+  
+  .then(function(dbArticle) {
     
-    .populate("note")
-
-    .then(function(dbArticle) {
-      
-      // If all Articles are successfully found, send them back to the client
-      res.json(dbArticle);
-    })
-    .catch(function(err) {
-      // If an error occurs, send the error back to the client
-      res.json(err);
-    });
+    // If all Articles are successfully found, send them back to the client
+    res.json(dbArticle);
+  })
+  .catch(function(err) {
+    // If an error occurs, send the error back to the client
+    res.json(err);
+  });
 });
 
 // Route for saving/updating an Article's associated Note
@@ -141,30 +145,30 @@ app.post("/articles/:id", function(req, res) {
   // save the new note that gets posted to the Notes collection
   // then find an article from the req.params.id
   // and update it's "note" property with the _id of the new note
-
+  
   var newNote = req.body;
-
+  
   console.log(newNote);
-
+  
   db.Note
-    .create(newNote)
-    .then(function(dbNote){
-
-      db.Article
-        .findById(req.params.id)
-        .update({note: dbNote.id})
-          .then(function(dbArticle){
-            res.json(dbArticle)
-          })
-
-      res.json(dbNote);
+  .create(newNote)
+  .then(function(dbNote){
+    
+    db.Article
+    .findById(req.params.id)
+    .update({note: dbNote.id})
+    .then(function(dbArticle){
+      res.json(dbArticle)
     })
-
-    .catch(function(err) {
-      // If an error occurred, send it to the client
-      res.json(err);
-    });
-
+    
+    res.json(dbNote);
+  })
+  
+  .catch(function(err) {
+    // If an error occurred, send it to the client
+    res.json(err);
+  });
+  
 });
 
 // Start the server
