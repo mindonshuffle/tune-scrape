@@ -75,11 +75,12 @@ $(document).on("click", ".note-button", function() {
     .done(function(data) {
       // Log the response
       console.log(data);
+      window.location.reload();
+      
 
     });
 
-    window.location.reload();
-
+    
   // Also, remove the values entered in the input and textarea for note entry
   // $(".note-text").val("");
 });
